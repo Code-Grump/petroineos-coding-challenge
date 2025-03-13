@@ -1,4 +1,4 @@
-﻿using NSubstitute;
+﻿using Microsoft.Extensions.Options;
 
 namespace Petroineos.DayAheadPowerPositionReporting;
 
@@ -43,7 +43,15 @@ public class CsvReportEmitterTests
             .OpenFile(default!, default, default)
             .ReturnsForAnyArgs(fileStream);
 
-        var emitter = new CsvReportEmitter(fileSystem);
+        var timeZoneProvider = Substitute.For<ILocalTimeZoneProvider>();
+        timeZoneProvider.GetLocalTimeZone().Returns(DateTimeZoneProviders.Tzdb.GetSystemDefault());
+
+        var options = new ReportingOptions
+        {
+            ReportDirectory = "/tmp/"
+        };
+
+        var emitter = new CsvReportEmitter(Options.Create(options), fileSystem, timeZoneProvider);
 
         await emitter.EmitReportAsync(report);
 
@@ -81,5 +89,39 @@ public class CsvReportEmitterTests
 
             """,
             result);
+    }
+
+    [Fact]
+    public async Task ReportsAreEmittedToConfiguredFolderWithExpectedNamingConvention()
+    {
+        var timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/London")!;
+        var localReportGenerationTime = new LocalDateTime(2025, 03, 13, 11, 50);
+
+        var report = new Report(
+            localReportGenerationTime.InZoneLeniently(timeZone).ToInstant(),
+            [
+                new ReportLine(new LocalTime(23, 00), 150),
+                new ReportLine(new LocalTime(00, 00), 150),
+            ]);
+
+        var fileSystem = Substitute.For<IFileSystem>();
+
+        fileSystem
+            .OpenFile(default!, default, default)
+            .ReturnsForAnyArgs(_ => new MemoryStream());
+
+        var timeZoneProvider = Substitute.For<ILocalTimeZoneProvider>();
+        timeZoneProvider.GetLocalTimeZone().Returns(timeZone);
+
+        var options = new ReportingOptions
+        {
+            ReportDirectory = "/tmp/"
+        };
+
+        var emitter = new CsvReportEmitter(Options.Create(options), fileSystem, timeZoneProvider);
+
+        await emitter.EmitReportAsync(report);
+
+        fileSystem.Received().OpenFile("/tmp/PowerPosition_20250313_1150.csv", FileMode.CreateNew, FileAccess.Write);
     }
 }
