@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Petroineos.DayAheadPowerPositionReporting", "src\Petroineos.DayAheadPowerPositionReporting.csproj", "{697E3D3F-164E-40E9-B1F4-7B8C08E600A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Petroineos.DayAheadPowerPositionReporting.Tests", "test\Petroineos.DayAheadPowerPositionReporting.Tests.csproj", "{E79CA744-2340-47E2-ADE2-E123A26B4F90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{697E3D3F-164E-40E9-B1F4-7B8C08E600A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{697E3D3F-164E-40E9-B1F4-7B8C08E600A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{697E3D3F-164E-40E9-B1F4-7B8C08E600A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E79CA744-2340-47E2-ADE2-E123A26B4F90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E79CA744-2340-47E2-ADE2-E123A26B4F90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E79CA744-2340-47E2-ADE2-E123A26B4F90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E79CA744-2340-47E2-ADE2-E123A26B4F90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
