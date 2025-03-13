@@ -1,8 +1,10 @@
-﻿using Services;
+﻿using Polly;
+using Services;
 
 namespace Petroineos.DayAheadPowerPositionReporting;
 
 public class ReportGenerator(
+    ILogger<ReportGenerator> logger,
     IPowerService powerService,
     IReportEmitter emitter,
     IClock clock,
@@ -13,7 +15,21 @@ public class ReportGenerator(
         var now = clock.GetCurrentInstant();
         var date = now.InZone(localTimeZoneProvider.GetLocalTimeZone()).Date;
 
-        var trades = await powerService.GetTradesAsync(date.ToDateTimeUnspecified());
+        // This API looks flaky. We'll attempt the fetch a number of times until we're provided with a result.
+        var retryPolicy = Policy
+            .Handle<PowerServiceException>()
+            .WaitAndRetryAsync(
+                3, // Maximum of 3 attempts.
+                retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // Use an exponential backoff delay.
+                (exception, delay, retryCount, context) =>
+                {
+                    logger.LogWarning(
+                        exception,
+                        "Failed to fetch trades from PowerService (attempt {AttemptCount}",
+                        retryCount);
+                }); 
+        
+        var trades = await retryPolicy.ExecuteAsync(() => powerService.GetTradesAsync(date.ToDateTimeUnspecified()));
 
         var report = CreateReport(now, trades);
 

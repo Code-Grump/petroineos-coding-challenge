@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Services;
 
 namespace Petroineos.DayAheadPowerPositionReporting;
@@ -15,7 +16,10 @@ public class ReportGeneratorTests
 
         powerService
             .GetTradesAsync(default)
-            .ReturnsForAnyArgs(Task.FromResult<IEnumerable<PowerTrade>>([new PowerTrade { }]));
+            .ReturnsForAnyArgs(Task.FromResult<IEnumerable<PowerTrade>>(
+                [
+                    PowerTrade.Create(new DateTime(2015, 04, 01), 24)
+                ]));
 
         var clock = Substitute.For<IClock>();
         clock.GetCurrentInstant().Returns(localReportGenerationTime.InZoneLeniently(timeZone).ToInstant());
@@ -24,6 +28,7 @@ public class ReportGeneratorTests
         localTimeZoneProvider.GetLocalTimeZone().Returns(timeZone);
 
         var generator = new ReportGenerator(
+            Substitute.For<ILogger<ReportGenerator>>(),
             powerService,
             Substitute.For<IReportEmitter>(),
             clock,
@@ -109,6 +114,7 @@ public class ReportGeneratorTests
         var emitter = Substitute.For<IReportEmitter>();
 
         var generator = new ReportGenerator(
+            Substitute.For<ILogger<ReportGenerator>>(),
             powerService,
             emitter,
             clock,
@@ -151,5 +157,38 @@ public class ReportGeneratorTests
                     new ReportLine(new LocalTime(21, 00), 80),
                     new ReportLine(new LocalTime(22, 00), 80)
                 ]));
+    }
+
+    [Fact]
+    public async Task ReportGenerationRetriesOnErrorFetchingPowerVolumes()
+    {
+        var timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull("Europe/London")!;
+        var localReportGenerationTime = new LocalDateTime(2025, 03, 13, 11, 50);
+
+        var powerService = Substitute.For<IPowerService>();
+
+        powerService
+            .GetTradesAsync(default)
+            .ReturnsForAnyArgs(
+                _ => { throw new PowerServiceException("Error retrieving power volumes"); },
+                _ => Task.FromResult<IEnumerable<PowerTrade>>(
+                    [
+                        PowerTrade.Create(new DateTime(2015, 04, 01), 24)
+                    ]));
+
+        var clock = Substitute.For<IClock>();
+        clock.GetCurrentInstant().Returns(localReportGenerationTime.InZoneLeniently(timeZone).ToInstant());
+
+        var localTimeZoneProvider = Substitute.For<ILocalTimeZoneProvider>();
+        localTimeZoneProvider.GetLocalTimeZone().Returns(timeZone);
+
+        var generator = new ReportGenerator(
+            Substitute.For<ILogger<ReportGenerator>>(),
+            powerService,
+            Substitute.For<IReportEmitter>(),
+            clock,
+            localTimeZoneProvider);
+
+        await generator.GenerateReportAsync();
     }
 }

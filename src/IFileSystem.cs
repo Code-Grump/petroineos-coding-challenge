@@ -19,8 +19,3 @@ public interface IFileSystem
     /// at the end of the file's existing contents.</returns>
     Stream OpenFile(string path, FileMode mode, FileAccess access);
 }
-
-public class LocalFileSystem : IFileSystem
-{
-    public Stream OpenFile(string path, FileMode mode, FileAccess access) => File.Open(path, mode, access);
-}
