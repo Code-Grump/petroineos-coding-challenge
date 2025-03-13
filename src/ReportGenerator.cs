@@ -15,6 +15,13 @@ public class ReportGenerator(
 
         var trades = await powerService.GetTradesAsync(date.ToDateTimeUnspecified());
 
+        var report = CreateReport(now, trades);
+
+        await emitter.EmitReportAsync(report, cancellationToken);
+    }
+
+    private static Report CreateReport(Instant extractedAt, IEnumerable<PowerTrade> trades)
+    {
         var volumeByPeriod = new double[24];
         for (var i = 0; i < volumeByPeriod.Length; i++)
         {
@@ -23,9 +30,7 @@ public class ReportGenerator(
 
         var lines = volumeByPeriod.Select((volume, index) => new ReportLine(GetPeriodTime(index + 1), volume));
 
-        var report = new Report(now, [..lines]);
-
-        await emitter.EmitReportAsync(report, cancellationToken);
+        return new Report(extractedAt, [.. lines]);
     }
 
     private static LocalTime GetPeriodTime(int period)
