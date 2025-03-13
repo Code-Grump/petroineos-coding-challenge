@@ -9,6 +9,11 @@ builder.Services
     .BindConfiguration("Reporting")
     .ValidateDataAnnotations();
 
+builder.Services.AddWindowsService(options =>
+{
+    options.ServiceName = "Petroineos Day Ahead Power Position Reporting Service";
+});
+
 builder.Services.AddSingleton<IFileSystem, LocalFileSystem>();
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 builder.Services.AddSingleton<ILocalTimeZoneProvider, SystemLocalTimeZoneProvider>();
