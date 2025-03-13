@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
 
 namespace Petroineos.DayAheadPowerPositionReporting;
@@ -5,9 +6,13 @@ namespace Petroineos.DayAheadPowerPositionReporting;
 /// <summary>
 /// A background worker that generates a report at a specified interval.
 /// </summary>
-/// <param name="generator">The generator to invoke to produce the report.</param>
 /// <param name="logger">A logger to use to write diagnostic information.</param>
-public class Worker(IReportGenerator generator, ILogger<Worker> logger) : BackgroundService
+/// <param name="options">Options which control the reporting process.</param>
+/// <param name="generator">The generator to invoke to produce the report.</param>
+public class Worker(
+    ILogger<Worker> logger,
+    IOptions<ReportingOptions> options,
+    IReportGenerator generator) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -19,8 +24,7 @@ public class Worker(IReportGenerator generator, ILogger<Worker> logger) : Backgr
             {
                 logger.LogInformation("Report generation initiated");
 
-                // TODO: Establish delay from configuration.
-                var interval = TimeSpan.FromMinutes(30);
+                var interval = TimeSpan.FromMinutes(options.Value.ReportIntervalMinutes);
                 var stopwatch = Stopwatch.StartNew();
 
                 await generator.GenerateReportAsync(stoppingToken);

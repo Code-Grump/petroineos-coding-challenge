@@ -10,6 +10,7 @@ public class ReportingOptions
     /// <summary>
     /// Gets or sets the number of minutes between report generation.
     /// </summary>
+    [Range(1, int.MaxValue)]
     public int ReportIntervalMinutes { get; set; }
 
     /// <summary>

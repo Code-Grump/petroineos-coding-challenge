@@ -25,7 +25,7 @@ public class ReportGenerator(
                 {
                     logger.LogWarning(
                         exception,
-                        "Failed to fetch trades from PowerService (attempt {AttemptCount}",
+                        "Failed to fetch trades from PowerService (attempt {AttemptCount})",
                         retryCount);
                 }); 
         
